@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta http-equiv="preload">
+    <title>Uptime</title>	
+    <meta name="description" content="Status Page">
+    <link rel="icon" href="/static/icon"> 
+    <link rel="stylesheet" href="/static/css/index.css">
+
+ 
+
+  
+
+</head>
+
+<body style="padding: 0%; margin: 0%;">
+
+
+    <div style="height: 10vh; display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 0.5vh solid rgb(66, 66, 66);">
+
+      <div style="display: flex; align-items: center;">
+        <img style="position: relative; margin-left: 10vw; height: 60%;" src="/static/icon">
+        <h1 id="title" style="position: relative;margin: 0px; margin-left: 5vh;line-height: 1;">Uptime</h1>
+      </div>
+      <div class="option-icon" id="openbtn" onclick="document.getElementById('sideMenu').classList.toggle('open')">
+            <img class="img-invert" style="height: 80%; position: relative; top: 50%; left: 50%; transform: translate(-50%,-50%);" src="/static/svg/menu.svg">
+        </div>
+
+    </div>
+     
+    <div class="mdblock">
+      <div id="md-content" style="margin-left: 2.5%;">
+        <h1>Redme <br> <strong>Loading...</strong></h1>
+      </div>
+    </div>
+
+    <div id="chart">
+     
+    </div>
+
+
+    <div style="position: relative; text-align: center;" id="counter">Refresh Xm XXs</div>
+    <div style="position: relative; text-align: center; font-size: 12px;color: var(--muted);">Goptime v0.0.2</div>
+
+<div class="side-menu" id="sideMenu">
+        <div class="menu-item" style="display: none;" name="auth" onclick="window.location.href='/admin/'">
+            <img class="img-invert" src="/static/svg/monitor.svg">
+            <span>Monitors</span>
+        </div>
+
+        <div class="menu-item" style="display: none;" name="auth" onclick="window.location.href='/reg/'">
+            <img class="img-invert" src="/static/svg/account.svg">
+            <span>Account</span>
+        </div>
+
+        <div class="menu-item" onclick="toggleTheme()">
+            <img class="img-invert" src="/static/svg/theme.svg">
+
+            <span>Toggle theme</span>
+        </div>
+        <div id="login" class="menu-item" name="auth">
+            <img class="img-invert" src="/static/svg/login.svg">
+
+            <span>Login</span>
+        </div>
+       
+
+</div>
+
+</body>
+
+<script>
+
+  let server_data = JSON.parse("{{ .ServerInfo }}")
+  let monitors_raw = JSON.parse("{{ .Monitors }}")
+  let logined = "{{ .User }}"
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked@17.0.1/lib/marked.umd.min.js"></script>
+
+<script defer src="/static/js/index.js"></script>
+<script defer src="/static/js/theme.js"></script>
+
+
+</html>

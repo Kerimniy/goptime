@@ -195,6 +195,11 @@
 
   function update(){
 
+    for (el of document.querySelectorAll(".service-container")){
+      el.lastElementChild.style.display = "block"
+      el.firstElementChild.style.display = "none"
+    }
+
     fetch(`/get_info_from?time=${Math.round(Date.now()/1000)-rate}`, {method: "GET"})
     .then((rsp)=>{
 
@@ -204,6 +209,13 @@
       }
       else{
         console.error(rsp.status)
+        for (el of document.querySelectorAll(".service-container")){
+           setTimeout(()=>{
+            el.lastElementChild.style.display = "none"
+            el.firstElementChild.style.display = ""},
+            1000
+          )
+        }
       }
     }) 
     .then((raw_data)=>{

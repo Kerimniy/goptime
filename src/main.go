@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -28,6 +29,11 @@ type IndexCnt struct {
 	Monitors   string
 	ServerInfo string
 	User       bool
+}
+
+type BadgeCnt struct {
+	Uptime string
+	Color  string
 }
 
 type CreateAccountInfo struct {
@@ -57,6 +63,7 @@ var login_tmpl = template.Must(template.ParseFiles("data/templates/login.html"))
 var reg_tmpl = template.Must(template.ParseFiles("data/templates/reg.html"))
 var reset_pwd_tmpl = template.Must(template.ParseFiles("data/templates/reset_pwd.html"))
 var admin_tmpl = template.Must(template.ParseFiles("data/templates/admin.html"))
+var badge_tmpl = template.Must(template.ParseFiles("data/templates/badge.svg"))
 
 func load_monitors() {
 	rows, e := sqlite_query("SELECT * FROM monitors")
@@ -248,6 +255,8 @@ func main() {
 	http.HandleFunc("/api/recovery/", reset_password)
 	http.HandleFunc("/api/reg/", create_account)
 	http.HandleFunc("/api/login/", login)
+	http.HandleFunc("/api/badge/{id}/", get_badge)
+	http.HandleFunc("/api/badge/", get_badge)
 	http.HandleFunc("/send-test/", send_test_email)
 
 	fs := http.FileServer(http.Dir("./data"))
@@ -279,6 +288,39 @@ func index(w http.ResponseWriter, r *http.Request) {
 	cnt := IndexCnt{Monitors: monitors, ServerInfo: get_server_info(), User: is_logined(r, w)}
 
 	index_tmpl.Execute(w, cnt)
+}
+
+func get_badge(w http.ResponseWriter, r *http.Request) {
+
+	i_s := r.PathValue("id")
+	i, err := strconv.Atoi(i_s)
+	var uptime float32 = -1.0
+	if err != nil {
+		service_name := r.URL.Query().Get("name")
+
+		for _, el := range monitors {
+			if el.ServiceName == service_name {
+
+				uptime = el.getUptime()
+				break
+			}
+		}
+	} else if i < len(monitors) {
+		uptime = monitors[i].getUptime()
+	}
+
+	cnt := BadgeCnt{Uptime: fmt.Sprintf("%v", func() string {
+		if uptime >= 0 {
+			return fmt.Sprintf("%v", math.Round(float64(uptime)*1000)/10)
+		} else {
+			return "N/A"
+		}
+	}()), Color: p2rgb(uptime)}
+
+	w.Header().Add("Content-Type", "image/svg+xml")
+
+	badge_tmpl.Execute(w, cnt)
+
 }
 
 func render_login(w http.ResponseWriter, r *http.Request) {
@@ -570,7 +612,6 @@ func create_monitor(w http.ResponseWriter, r *http.Request) {
 }
 
 func update_server_info(w http.ResponseWriter, r *http.Request) {
-	
 
 	if r.Method != "POST" {
 		w.WriteHeader(405)
@@ -882,4 +923,31 @@ func read_file_as_str(path string) string {
 	}
 
 	return string(b)
+}
+
+func p2rgb(v float32) string {
+	var g float32
+	var r float32
+
+	if v == -1.0 {
+		return `rgb(128,128,128)`
+	}
+
+	v -= 0.25
+	if v < 0 {
+		v = 0
+	}
+
+	if v < 0.5 {
+
+		r = 255
+		g = (v * 2) * 245
+	} else {
+		r = (1 - (v-0.5)*2) * 250
+		if r < 0 {
+			r = 0
+		}
+		g = 245
+	}
+	return fmt.Sprintf(`rgb(%v,%v,0)`, r*0.9, g*0.9)
 }
