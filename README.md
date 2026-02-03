@@ -122,6 +122,8 @@ Checks:
 
 ```html
 <img src="http://your-host/api/badge?name=MyService" />
+<!-- or -->
+<img src="http://your-host/api/badge/<monitor index e.g 0>" />
 ```
 
 
