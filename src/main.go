@@ -606,6 +606,7 @@ func create_monitor(w http.ResponseWriter, r *http.Request) {
 	err = add_monitor_to_db(&monitor)
 	if err != nil {
 		w.WriteHeader(500)
+		fmt.Fprint(w, "url or name not unique")
 		return
 	}
 
@@ -668,6 +669,7 @@ func update_server_info(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(500)
+		fmt.Println(err)
 		fmt.Fprint(w, "info update")
 
 		return
@@ -894,7 +896,12 @@ func get_server_info() string {
 		}
 	}
 
-	return fmt.Sprintf(`{"title":"%s","md":"%s"}`, title, md)
+	_map := map[string]string{"title": title, "md": md}
+	res, e := json.Marshal(_map)
+	if e != nil {
+		return `{"title":"Uptime","md":""}`
+	}
+	return string(res)
 }
 
 func verify_password(email string, pwd string) bool {
@@ -917,6 +924,13 @@ func verify_password(email string, pwd string) bool {
 }
 
 func remove(slice []Monitor, s int) []Monitor {
+	if s >= len(slice) {
+		fmt.Printf("Index out of range. Index: %s, Len:%s\n", s, len(slice))
+		return slice
+	}
+	if len(slice)-1 == s {
+		return slice[:s]
+	}
 	return append(slice[:s], slice[s+1:]...)
 }
 

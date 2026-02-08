@@ -60,7 +60,7 @@ func load_conf() {
 		fmt.Println(err)
 		return
 	}
-	err = sqlite_exec("INSERT INTO server (title,md) VALUES(?,?)", cfg.Title, cfg.Md)
+	err = sqlite_exec("UPDATE server SET title=?, md=?", cfg.Title, cfg.Md)
 	if err != nil {
 		fmt.Println(err)
 		return

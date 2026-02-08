@@ -28,6 +28,17 @@
     document.getElementById("md-content").innerHTML =marked.parse(server_data["md"])
   }
 
+  
+  let md_height = 0
+  try{
+    md_height= document.getElementById("md-content").parentElement?.offsetHeight+parseFloat(getComputedStyle(document.getElementById("md-content").parentElement).marginTop)*2 || 0
+  }
+  catch (error){
+
+  }
+  document.getElementById("chart").style.minHeight=`calc(67.5vh - ${md_height}px)`
+ 
+
   let monitors = {}
   let m_length = 0
   for (let el of monitors_raw){
@@ -337,3 +348,4 @@
     var time = date + ' ' + month + ' ' + year + ' ' + hour.toString().padStart(2, '0') + ':' + min.toString().padStart(2, '0') + ':' + sec.toString().padStart(2, '0') ;
     return time;
   }
+
