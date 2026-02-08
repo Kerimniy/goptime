@@ -96,7 +96,6 @@ func run_SQLite_server() {
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 
-
 	for req := range input {
 
 		if req.t == 0 {
@@ -117,7 +116,10 @@ func run_SQLite_server() {
 				resp := Response{data: nil, err: err}
 				req.reply <- resp
 				close(req.reply)
+				continue
 			}
+
+			bk:=false
 
 			for _, e := range req.stmt {
 				_, err = tx.Exec(e.q, e.params...)
@@ -129,7 +131,12 @@ func run_SQLite_server() {
 					resp := Response{data: nil, err: err}
 					req.reply <- resp
 					close(req.reply)
+					bk=true
+					break
 				}
+			}
+			if bk{
+				continue
 			}
 			err = tx.Commit()
 

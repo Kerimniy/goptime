@@ -18,6 +18,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var title string = ""
+var md string = ""
+
 var monitors []Monitor
 
 type AdminCnt struct {
@@ -245,6 +248,7 @@ func main() {
 	http.HandleFunc("/get-state", get_monitors_state)
 	http.HandleFunc("/get_info_from", get_info_from)
 	http.HandleFunc("/create-monitor/", create_monitor)
+	http.HandleFunc("/update-monitor/", update_monitor)
 	http.HandleFunc("/delete-monitor/", delete_monitor)
 	http.HandleFunc("/update-server/", update_server_info)
 	http.HandleFunc("/admin/", render_admin)
@@ -657,10 +661,10 @@ func update_server_info(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 	}
 
-	md := r.FormValue("md")
-	title := r.FormValue("title")
+	r_md := r.FormValue("md")
+	r_title := r.FormValue("title")
 
-	err = sqlite_exec("UPDATE server SET md=?, title=?", md, title)
+	err = sqlite_exec("UPDATE server SET md=?, title=?", r_md, r_title)
 
 	if err != nil {
 		w.WriteHeader(500)
@@ -668,6 +672,10 @@ func update_server_info(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	md = r_md
+	title = r_title
+
 }
 
 func delete_monitor(w http.ResponseWriter, r *http.Request) {
@@ -742,11 +750,11 @@ func update_monitor(w http.ResponseWriter, r *http.Request) {
 	queries := make([]string, 2)
 	params := make([][]any, 2)
 
-	queries = append(queries, "UPDATE checks WHERE SET url=?, service_name=? WHERE service_name=?")
-	queries = append(queries, "UPDATE monitors WHERE SET url=?, service_name=?, interval=?, timeout=?, mgroup=? WHERE service_name=?")
+	queries = append(queries, "UPDATE checks SET url=?, service_name=? WHERE service_name=?")
+	queries = append(queries, "UPDATE monitors SET url=?, service_name=?, interval=?, timeout=?, mgroup=? WHERE service_name=?")
 
 	params = append(params, []any{data.Url, data.Name, data.Cname})
-	params = append(params, []any{data.Url, data.Name, data.Interval, data.Interval, data.Group, data.Cname})
+	params = append(params, []any{data.Url, data.Name, data.Interval, data.Timeout, data.Group, data.Cname})
 
 	//tx.Exec("UPDATE checks WHERE SET url=?, service_name=? WHERE service_name=?", data.Url, data.Name, data.Cname)
 	//tx.Exec("UPDATE monitors WHERE SET url=?, service_name=?, interval=?, timeout=?, mgroup=? WHERE service_name=?", data.Url, data.Name, data.Interval, data.Interval, data.Group, data.Cname)
@@ -758,20 +766,21 @@ func update_monitor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, e := range monitors {
+	for i, e := range monitors {
 
 		if e.ServiceName == data.Cname {
 
-			e.stop()
+			monitors[i].stop()
 
-			e.http_client = client
-			e.Group = data.Group
-			e.Url = data.Url
-			e.ServiceName = data.Name
-			e.Interval = data.Interval
-			e.Timeout = data.Timeout
+			monitors[i].http_client = client
+			monitors[i].Group = data.Group
+			monitors[i].Url = data.Url
+			monitors[i].ServiceName = data.Name
+			monitors[i].Interval = data.Interval
+			monitors[i].Timeout = data.Timeout
 
-			go e.run()
+			go monitors[i].run()
+			break
 		}
 
 	}
@@ -800,7 +809,6 @@ func get_monitors_info() string {
 	if e != nil {
 		return "[]"
 	}
-
 	return string(r)
 }
 
@@ -860,26 +868,33 @@ func add_monitor_to_db(monitor *Monitor) error {
 
 func get_server_info() string {
 
-	rows, err := sqlite_query("SELECT title, md FROM server")
+	if title == "" && md == "" {
+		rows, err := sqlite_query("SELECT title, md FROM server")
 
-	if err != nil {
-		fmt.Println(err)
-		return `{"title":"Uptime","md":""}`
-	}
-
-	for _, row := range rows {
-
-		buff, e := json.Marshal(row)
-
-		if e != nil {
-			fmt.Println(e)
+		if err != nil {
+			fmt.Println(err)
 			return `{"title":"Uptime","md":""}`
-		} else {
-			return string(buff)
 		}
 
+		for _, row := range rows {
+
+			buff, e := json.Marshal(row)
+
+			if e != nil {
+				fmt.Println(e)
+				title = "Uptime"
+				md = ""
+				return `{"title":"Uptime","md":""}`
+			} else {
+				title = row["title"].(string)
+				md = row["md"].(string)
+				return string(buff)
+			}
+
+		}
 	}
-	return `{"title":"Uptime","md":""}`
+
+	return fmt.Sprintf(`{"title":"%s","md":"%s"}`, title, md)
 }
 
 func verify_password(email string, pwd string) bool {

@@ -12,13 +12,15 @@ import (
 )
 
 type Config struct {
+	Title     string              `json:"title"`
+	Md        string              `json:"md"`
 	Password  string              `json:"password"`
 	Mail_info Mail                `json:"mail"`
 	Monitors  []CreateMonitorData `json:"monitors"`
 }
 
 func load_conf() {
-	if user_exists{
+	if user_exists {
 		return
 	}
 	file, err := os.Open("data/CONF.json")
@@ -45,7 +47,7 @@ func load_conf() {
 		fmt.Println(err)
 		return
 	}
-
+	fmt.Println(cfg)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(cfg.Password), bcrypt.DefaultCost)
 
 	if err != nil {
@@ -58,6 +60,14 @@ func load_conf() {
 		fmt.Println(err)
 		return
 	}
+	err = sqlite_exec("INSERT INTO server (title,md) VALUES(?,?)", cfg.Title, cfg.Md)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	title = cfg.Title
+	md = cfg.Md
+
 	user_exists = true
 
 	for _, el := range cfg.Monitors {

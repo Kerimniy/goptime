@@ -71,6 +71,10 @@ body.light{
     margin-right: 3vw;
 }
 
+#main-icon{
+  height: 6vh !important;
+}
+
 *{
     transition: background 0.2s ease;
 }
@@ -91,7 +95,7 @@ body > div:first-child h1 {
 }
 
 body > div:first-child img {
-  height: 36px !important;
+  height: 3.5vh;
 }
 
 .mdblock {

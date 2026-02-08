@@ -135,7 +135,7 @@ function createMonitorBlock(e_data){
   monitors_settings.appendChild(grid)
 
   button.addEventListener("click",()=>{
-    let res = {"cname":grid.dataset.cname, "url": url_textarea.value, "name": name_textarea.value, "group": group_textarea.value, "interval":interval_input.value,"timeout": timeout_input.value } 
+    let res = {"cname":grid.dataset.cname, "url": url_textarea.value, "name": name_textarea.value, "group": group_textarea.value, "interval":Number(interval_input.value),"timeout":Number(timeout_input.value) } 
 
      let st;
     fetch(`/update-monitor/`, {method: 'POST',headers: {'Content-Type': 'application/json'},  body: JSON.stringify(res)})

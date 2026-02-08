@@ -1,0 +1,121 @@
+<html>
+
+<head>
+    <link rel="icon" href="/static/icon" type="image/png">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registration</title>
+<link rel="stylesheet" href="/static/css/login.css">
+
+  <script defer src="/static/js/theme.js"></script>
+
+
+</head>
+
+<body style="overflow: hidden !important;">
+  <div class="main">
+    <p class="sign" id="h" align="center">Registration</p>
+    <div class="form1">
+      <input id="to" class="un" type="email" align="center" placeholder="Email" required>
+      <input id="password" class="un" type="text" align="center" placeholder="Password" required>
+      <input id="new_password" class="un" style="display: none;" type="text" align="center" placeholder="New password" required>
+      <input id="host" class="un" type="text" align="center" placeholder="SMTP host">
+      <input id="from" class="un" type="email" align="center" placeholder="Email sender">
+      <input id="username" class="un" type="text" align="center" placeholder="Email user">
+      <input id="mail_pwd" class="un" type="text" align="center" placeholder="Email password">
+
+      <button class="submit" onclick="send_test()"  align="center">Send test recovery email</button>
+      <button class="submit" onclick="post()"  align="center">Submit</button>
+            
+                
+    </div>
+     
+</body>
+<script defer src="/static/js/statusbar.js"></script>
+
+<script>
+
+  let email_input  = document.getElementById("to")
+  let password_input  = document.getElementById("password")
+  let new_password_input  = document.getElementById("new_password")
+  let from_input  = document.getElementById("from")
+  let username_input  = document.getElementById("username")
+  let host_input  = document.getElementById("host")
+  let mail_pwd_input  = document.getElementById("mail_pwd")
+    
+
+   function post(){
+
+    if (password_input.value.length<4 || (change&&new_password_input.value.length<4)){
+          createStatus("password too short")
+          return
+        }
+
+        let data = {"password": password_input.value,"new_password": new_password_input.value,"mail_info":{"to":email_input.value,"from":from_input.value,"username":username_input.value,"host": host_input.value,"password":mail_pwd_input.value}}
+
+        console.log(data)
+
+        fetch("/api/reg/",{headers: {'Content-Type': 'application/json'},method:"POST",body: JSON.stringify(data),})
+       .then(function(response){
+          if (response.ok){
+            return ""
+          }
+          else{
+            return response.text()
+          }
+        }).then((t)=>{
+          createStatus(t)
+        })
+            
+    }
+
+   function send_test(){
+        
+        let email_input  = document.getElementById("to")
+        let from_input  = document.getElementById("from")
+        let username_input  = document.getElementById("username")
+        let host_input  = document.getElementById("host")
+        let mail_pwd_input  = document.getElementById("mail_pwd")
+    
+        let data ={"to":email_input.value,"from":from_input.value,"username":username_input.value,"host": host_input.value,"password":mail_pwd_input.value}
+
+        console.log(data)
+
+        fetch("/send-test/",{headers: {'Content-Type': 'application/json'},method:"POST",body: JSON.stringify(data),})
+        .then(function(response){
+          if (response.ok){
+            console.log(200)
+
+            //window.location.href = next
+          }
+          else{
+            console.error(response)
+          }
+        })
+            
+    }
+
+
+</script>
+
+
+<script>
+let change=false
+  let data = JSON.parse(`{{ . }}`)
+    if (Object.keys(data).length>0){
+      change=true
+    email_input.value=data["to"] || ""
+    from_input.value=data["from"] || ""
+    username_input.value=data["username"] || ""
+    host_input.value=data["host"] || ""
+    mail_pwd_input.value=data["password"] || ""
+
+    document.title = "Settings"
+    document.getElementById("h").innerText = "Settings"
+    password_input.placeholder = "Old password"
+    new_password_input.style.display = ""
+  }
+</script>
+
+
+</html>
