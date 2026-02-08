@@ -234,8 +234,9 @@ body > div:first-child img {
 
   position: absolute;
 
-  background: #000;
+  background: var(--bg);
   border-radius: 8px;
+  padding: 0.5rem;
   font-size: 12px;
 }
 
@@ -253,6 +254,7 @@ body > div:first-child img {
   .uptimebar > div:nth-child(even) {
     display: none !important;
   }
+
   .uptimebar > div {
     width: 4.25%; 
   }
@@ -261,12 +263,29 @@ body > div:first-child img {
 
 @media (max-width: 400px) {
 
-  .uptimebar{
+  .uptimebar > div{
+    width: 12.5%; 
     display: none;
   }
+    .uptimebar > div:nth-child(30) {
+    display: block !important;
+  }
+  .uptimebar > div:nth-child(28) {
+    display: block !important;
+  }
+  .uptimebar > div:nth-child(26) {
+    display: block !important;
+  }
+  .uptimebar > div:nth-child(24) {
+    display: block !important;
+  }
+  .uptimebar > div:nth-child(22) {
+    display: block !important;
+  }
+
 
   .service-grid{
-    grid-template-columns: 30% 75%;
+    grid-template-columns: 25% 35% 30%;
   }
 
   .service-grid {
@@ -282,8 +301,33 @@ body > div:first-child img {
   }
 }
 
+@media (max-width: 270px) {
+
+  #title{
+    margin-left: 6vw !important;
+  }
+
+  .uptimebar{
+    padding-right: 1.25rem;
+  }
+  .service-grid{
+    grid-template-columns: 25% 35% 30%;
+  }
+  .service-uptime >p{
+    display: none;
+  }
+    .uptimebar > div:nth-child(24) {
+    display: none !important;
+  }
+  .uptimebar > div:nth-child(22) {
+    display: none !important;
+  }
+}
 @media (max-width: 220px) {
 
+  #main-icon{
+    display: none;
+  }
   .service-uptime >p{
     display: none;
   }
