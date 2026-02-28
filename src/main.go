@@ -78,13 +78,12 @@ func load_monitors() {
 	for _, row := range rows {
 		var monitor = Monitor{}
 
-		//rows.Scan(&monitor.Url, &monitor.ServiceName, &monitor.Interval, &monitor.Timeout, &int_dummy, &int_dummy, &int_dummy, &monitor.Group)
-
 		monitor.Url = row["url"].(string)
 		monitor.ServiceName = row["service_name"].(string)
 		monitor.Interval = row["interval"].(float64)
 		monitor.Timeout = row["timeout"].(float64)
 		monitor.Group = row["mgroup"].(string)
+		monitor.Method = row["method"].(string)
 
 		client := http.Client{Timeout: time.Duration(monitor.Timeout) * time.Second}
 		sqlite_exec("DELETE FROM checks WHERE service_name = ? AND rowid NOT IN (SELECT rowid FROM checks WHERE service_name = ? ORDER BY timestamp DESC LIMIT 30);", monitor.ServiceName, monitor.ServiceName)
@@ -161,7 +160,7 @@ func init_db() {
 	if eerr != nil {
 		log.Fatal(eerr)
 	}
-	eerr = sqlite_exec("CREATE TABLE IF NOT EXISTS monitors ( url TEXT NOT NULL, service_name TEXT, interval REAL, timeout REAL, success INTEGER, all_requests INTEGER, timestamp TEXT NOT NULL, mgroup TEXT NOT NULL, PRIMARY KEY (url,service_name) )")
+	eerr = sqlite_exec("CREATE TABLE IF NOT EXISTS monitors ( url TEXT NOT NULL, service_name TEXT, interval REAL, timeout REAL,method TEXT, success INTEGER, all_requests INTEGER, timestamp TEXT NOT NULL, mgroup TEXT NOT NULL, PRIMARY KEY (url,service_name) )")
 	if eerr != nil {
 		log.Fatal(eerr)
 	}
@@ -262,6 +261,7 @@ func main() {
 	http.HandleFunc("/api/badge/{id}/", get_badge)
 	http.HandleFunc("/api/badge/", get_badge)
 	http.HandleFunc("/send-test/", send_test_email)
+	http.HandleFunc("/reset-statistics/", reset_statistics)
 
 	fs := http.FileServer(http.Dir("./data"))
 	http.Handle("/static/", fs)
@@ -593,15 +593,19 @@ func create_monitor(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	if data.Interval < 1 {
+	if data.Interval < 5 {
 		w.WriteHeader(400)
 		fmt.Fprint(w, "Interval too short")
 		return
 	}
 
+	if data.Method != "HEAD" && data.Method != "GET" {
+		data.Method = "GET"
+	}
+
 	client := http.Client{Timeout: time.Duration(data.Timeout) * time.Second}
 	sqlite_exec("DELETE FROM checks WHERE service_name=? ORDER BY timestamp DESC LIMIT -1 OFFSET 30", data.Name)
-	monitor := Monitor{Url: data.Url, ServiceName: data.Name, Group: data.Group, Timeout: data.Timeout, Interval: data.Interval, http_client: client}
+	monitor := Monitor{Url: data.Url, ServiceName: data.Name, Group: data.Group, Timeout: data.Timeout, Interval: data.Interval, Method: data.Method, http_client: client}
 
 	err = add_monitor_to_db(&monitor)
 	if err != nil {
@@ -700,9 +704,9 @@ func delete_monitor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cname := string(buff)
-
 	for i, e := range monitors {
 		if e.ServiceName == cname {
+			e.stop()
 			err = e.delete()
 			if err != nil {
 				w.WriteHeader(500)
@@ -712,7 +716,6 @@ func delete_monitor(w http.ResponseWriter, r *http.Request) {
 			monitors = remove(monitors, i)
 		}
 	}
-
 	w.WriteHeader(205)
 }
 
@@ -749,14 +752,19 @@ func update_monitor(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	*/
+
+	if data.Method != "HEAD" && data.Method != "GET" {
+		data.Method = "GET"
+	}
+
 	queries := make([]string, 2)
 	params := make([][]any, 2)
 
 	queries = append(queries, "UPDATE checks SET url=?, service_name=? WHERE service_name=?")
-	queries = append(queries, "UPDATE monitors SET url=?, service_name=?, interval=?, timeout=?, mgroup=? WHERE service_name=?")
+	queries = append(queries, "UPDATE monitors SET url=?, service_name=?, interval=?, timeout=?, mgroup=?, method=? WHERE service_name=?")
 
 	params = append(params, []any{data.Url, data.Name, data.Cname})
-	params = append(params, []any{data.Url, data.Name, data.Interval, data.Timeout, data.Group, data.Cname})
+	params = append(params, []any{data.Url, data.Name, data.Interval, data.Timeout, data.Group, data.Method, data.Cname})
 
 	//tx.Exec("UPDATE checks WHERE SET url=?, service_name=? WHERE service_name=?", data.Url, data.Name, data.Cname)
 	//tx.Exec("UPDATE monitors WHERE SET url=?, service_name=?, interval=?, timeout=?, mgroup=? WHERE service_name=?", data.Url, data.Name, data.Interval, data.Interval, data.Group, data.Cname)
@@ -780,6 +788,7 @@ func update_monitor(w http.ResponseWriter, r *http.Request) {
 			monitors[i].ServiceName = data.Name
 			monitors[i].Interval = data.Interval
 			monitors[i].Timeout = data.Timeout
+			monitors[i].Method = data.Method
 
 			go monitors[i].run()
 			break
@@ -788,6 +797,41 @@ func update_monitor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(202)
+}
+
+func reset_statistics(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != "POST" {
+		w.WriteHeader(405)
+		return
+	}
+
+	if !is_logined(r, w) {
+		http.Redirect(w, r, "/login", 303)
+	}
+
+	q := []string{
+		"DELETE FROM checks",
+		"UPDATE monitors SET success=0,all_requests=0,timestamp=?",
+	}
+
+	p := [][]any{
+		[]any{nil},
+		[]any{time.Now().Unix()},
+	}
+
+	err := sqlite_exec_tx(q, p)
+
+	if err != nil {
+		w.WriteHeader(500)
+
+		fmt.Fprint(w, err)
+
+		return
+	}
+
+	w.WriteHeader(202)
+
 }
 
 func get_monitors_info() string {
@@ -802,6 +846,7 @@ func get_monitors_info() string {
 		mi.Interval = e.Interval
 		mi.Timeout = e.Timeout
 		mi.Url = e.Url
+		mi.Method = e.Method
 
 		data = append(data, mi)
 	}
@@ -857,14 +902,14 @@ func get_all_info() []MonitorInfo {
 		mi.Uptime = e.getUptime()
 
 		res = append(res, mi)
+		fmt.Println()
 	}
-
 	return res
 }
 
 func add_monitor_to_db(monitor *Monitor) error {
 
-	err := sqlite_exec("INSERT INTO monitors (url, service_name, interval, timeout,timestamp,mgroup, success, all_requests) VALUES (?,?,?,?,?,?,0,0);", monitor.Url, monitor.ServiceName, monitor.Interval, monitor.Timeout, time.Now().Unix(), monitor.Group)
+	err := sqlite_exec("INSERT INTO monitors (url, service_name, interval, timeout,timestamp,mgroup,method, success, all_requests) VALUES (?,?,?,?,?,?,?,0,0);", monitor.Url, monitor.ServiceName, monitor.Interval, monitor.Timeout, time.Now().Unix(), monitor.Group, monitor.Method)
 	return err
 }
 
@@ -925,7 +970,7 @@ func verify_password(email string, pwd string) bool {
 
 func remove(slice []Monitor, s int) []Monitor {
 	if s >= len(slice) {
-		fmt.Printf("Index out of range. Index: %s, Len:%s\n", s, len(slice))
+		fmt.Printf("Index out of range. Index: %d, Len:%d\n", s, len(slice))
 		return slice
 	}
 	if len(slice)-1 == s {

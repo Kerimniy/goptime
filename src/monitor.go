@@ -16,6 +16,7 @@ type Monitor struct {
 
 	running     bool
 	http_client http.Client
+	Method      string
 }
 
 type CreateMonitorData struct {
@@ -24,6 +25,7 @@ type CreateMonitorData struct {
 	Group    string  `json:"group"`
 	Interval float64 `json:"interval"`
 	Timeout  float64 `json:"timeout"`
+	Method   string  `json:"method"`
 }
 
 type UpdateMonitorData struct {
@@ -33,6 +35,7 @@ type UpdateMonitorData struct {
 	Group    string  `json:"group"`
 	Interval float64 `json:"interval"`
 	Timeout  float64 `json:"timeout"`
+	Method   string  `json:"method"`
 }
 
 type Check struct {
@@ -46,6 +49,7 @@ type MonitorInfo struct {
 	Group  string  `json:"group"`
 
 	Checks []Check `json:"checks"`
+	Method string  `json:"method"`
 }
 
 func new_monitor(Url string, Interval float64, Timeout float64, ServiceName string, Group string) Monitor {
@@ -61,12 +65,13 @@ func new_monitor(Url string, Interval float64, Timeout float64, ServiceName stri
 
 func (monitor *Monitor) ping() {
 
-	res, err := monitor.http_client.Get(monitor.Url)
+	request, err := http.NewRequest(monitor.Method, monitor.Url, nil)
+	res, err := monitor.http_client.Do(request)
 
 	var st = 0
 
 	if err != nil {
-		fmt.Println(err, monitor.ServiceName, monitor.Interval)
+		fmt.Println(err, monitor.ServiceName)
 	}
 
 	if err == nil {
@@ -181,6 +186,9 @@ func (monitor *Monitor) getUptime() float32 {
 
 		s = float64(row["success"].(int64))
 		a = float64(row["all_requests"].(int64))
+		if a == 0 {
+			a = 1
+		}
 	}
 	return float32(math.Round(s/a*100) / 100)
 
@@ -204,6 +212,7 @@ func (monitor *Monitor) run() {
 		time.Sleep(time.Duration(monitor.Interval) * time.Second)
 	}
 }
+
 func (monitor *Monitor) stop() {
 	monitor.running = false
 }

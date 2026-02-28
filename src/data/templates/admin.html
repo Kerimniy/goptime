@@ -75,6 +75,15 @@
         <div style="text-align: center;">Timeout</div>
         <div><input id="create-timeout" class="textinput" type="number"></div>
       </div>
+      <div>
+        <div style="text-align: center;" >Method</div>
+        
+        <select class="textinput" id="method">
+          <option value="GET">GET</option>
+          <option value="HEAD">HEAD</option>
+        </select>
+
+      </div>
 
       <div><div style="white-space: pre;"> </div><button class="buttonSettings" style="grid-column: 1 / span 2;" onclick="createMonitorRequest()">Create</button></div>
 
@@ -89,7 +98,14 @@
     <h2 style="margin-left: 10vw;">Monitors settings</h2>
     
 
-    </div>
+  </div>
+
+    
+  <div id="reset-statistics" style=" margin-top: 7vh; margin-bottom: 4vh;padding-bottom: 3vh; display: flex; flex-direction: column;">
+    <h2 style="margin-left: 10vw;">Reset statistics</h2>
+    <button class="buttonSettings" style="width: calc(min(1100px, 92%)/4.5);align-self: center;" onclick="fetch('/reset-statistics/',{method:`POST`})">Reset</button>
+
+  </div>
 
     
     

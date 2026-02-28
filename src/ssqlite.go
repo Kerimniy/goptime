@@ -119,7 +119,7 @@ func run_SQLite_server() {
 				continue
 			}
 
-			bk:=false
+			bk := false
 
 			for _, e := range req.stmt {
 				_, err = tx.Exec(e.q, e.params...)
@@ -131,11 +131,11 @@ func run_SQLite_server() {
 					resp := Response{data: nil, err: err}
 					req.reply <- resp
 					close(req.reply)
-					bk=true
+					bk = true
 					break
 				}
 			}
-			if bk{
+			if bk {
 				continue
 			}
 			err = tx.Commit()

@@ -41,6 +41,14 @@ function createMonitorBlock(e_data){
   let timeout_label = document.createElement("div")
   let timeout_input_div = document.createElement("div")
   let timeout_input = document.createElement("input")
+  
+  
+  let method_container = document.createElement("div")
+  let method_label = document.createElement("div")
+  let method_select= document.createElement("select")
+  let method_option_get = document.createElement("option")
+  let method_option_head = document.createElement("option")
+
 
   let grid = document.createElement("div")
   grid.classList.add("createmonitorgrid")
@@ -58,6 +66,7 @@ function createMonitorBlock(e_data){
   group_label.style.textAlign = "center"
   interval_label.style.textAlign = "center"
   timeout_label.style.textAlign = "center"
+  method_label.style.textAlign = "center"
 
 
   url_textarea.classList.add("textinput")
@@ -65,6 +74,7 @@ function createMonitorBlock(e_data){
   group_textarea.classList.add("textinput")
   interval_input.classList.add("textinput")
   timeout_input.classList.add("textinput")
+  method_select.classList.add("textinput")
 
   button.classList.add("buttonSettings")
   button.style.gridColumn = "1 / span 2"
@@ -76,7 +86,7 @@ function createMonitorBlock(e_data){
   delete_button.style.background = "var(--danger)"
 
   button_text_dummy.innerText=" "
-  button_text_dummy.style.whiteSpace = "pre"
+  //button_text_dummy.style.whiteSpace = "pre"
 
   interval_input.type = "number"
   timeout_input.type = "number"
@@ -107,27 +117,42 @@ function createMonitorBlock(e_data){
   delete_button_container.appendChild(delete_button_text_dummy)
   delete_button_container.appendChild(delete_button)
 
+
+  
+  method_select.appendChild(method_option_get)
+  method_select.appendChild(method_option_head)
+  method_container.appendChild(method_label)
+  method_container.appendChild(method_select)
+
+
   url_label.innerText = "Url"
   name_label.innerText = "Name"
   group_label.innerText = "Group"
   interval_label.innerText = "Interval"
   timeout_label.innerText = "Timeout"
+  method_label.innerText = "Method"
+
+  method_option_get.innerText="GET"
+  method_option_head.innerText="HEAD"
 
   url_textarea.value = e_data["url"]
   name_textarea.value = e_data["name"]
   group_textarea.value = e_data["group"]
   interval_input.value = Number(e_data["interval"])
   timeout_input.value = Number(e_data["timeout"])
+  method_select.value = e_data["method"]
+
 
   grid.appendChild(url_container)
   grid.appendChild(name_container)
   grid.appendChild(group_container)
   grid.appendChild(interval_container)
   grid.appendChild(timeout_container)
+  grid.appendChild(method_container)
+  grid.appendChild(document.createElement("div"))
+  grid.appendChild(document.createElement("div"))
   grid.appendChild(button_container)
-  grid.appendChild(document.createElement("div"))
-  grid.appendChild(document.createElement("div"))
-  grid.appendChild(document.createElement("div"))
+
   grid.appendChild(delete_button_container)
 
   grid.dataset.cname = name_textarea.value
@@ -135,7 +160,7 @@ function createMonitorBlock(e_data){
   monitors_settings.appendChild(grid)
 
   button.addEventListener("click",()=>{
-    let res = {"cname":grid.dataset.cname, "url": url_textarea.value, "name": name_textarea.value, "group": group_textarea.value, "interval":Number(interval_input.value),"timeout":Number(timeout_input.value) } 
+    let res = {"cname":grid.dataset.cname, "url": url_textarea.value, "name": name_textarea.value, "group": group_textarea.value, "interval":Number(interval_input.value),"timeout":Number(timeout_input.value),"method":method_select.value } 
 
      let st;
     fetch(`/update-monitor/`, {method: 'POST',headers: {'Content-Type': 'application/json'},  body: JSON.stringify(res)})
@@ -203,7 +228,7 @@ function createMonitorRequest(){
     let create_interval = document.getElementById("create-interval")
     let create_timeout = document.getElementById("create-timeout")
 
-    let res = {"url":create_url.value, "name":create_name.value, "group": create_group.value, "interval": Number(create_interval.value), "timeout": Number(create_timeout.value)}
+    let res = {"url":create_url.value, "name":create_name.value, "group": create_group.value, "interval": Number(create_interval.value), "timeout": Number(create_timeout.value), "method":document.getElementById("method").value}
      let st;
 
     fetch(`/create-monitor/`, {method: 'POST',headers: {'Content-Type': 'application/json'},  body: JSON.stringify(res)})
@@ -231,15 +256,15 @@ function createMonitorRequest(){
     })
   }
 
-  function imitatefinput(){
-    finput.click()
-  }
+function imitatefinput(){
+  finput.click()
+}
 
-  function setfilename(){
-    finputbutton.innerText = finput.files[0].name || "Upload"
-  }
+function setfilename(){
+  finputbutton.innerText = finput.files[0].name || "Upload"
+}
 
-  function chengeServerSettings(){
+function chengeServerSettings(){
     let data = new FormData()
     data.append("title", title_input.value)
     data.append("md", md.value)
@@ -270,4 +295,4 @@ function createMonitorRequest(){
       setTimeout(()=>{statusBar.style.transform = "translateX(100%)"},3000)
     })
   
-  }
+}

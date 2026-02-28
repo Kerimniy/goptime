@@ -15,6 +15,7 @@ type Config struct {
 	Title     string              `json:"title"`
 	Md        string              `json:"md"`
 	Password  string              `json:"password"`
+	Method    string              `json:"method"`
 	Mail_info Mail                `json:"mail"`
 	Monitors  []CreateMonitorData `json:"monitors"`
 }
@@ -30,7 +31,7 @@ func load_conf() {
 	}
 	defer func() {
 		if err = file.Close(); err != nil {
-
+			fmt.Println(err)
 		}
 	}()
 
@@ -47,7 +48,7 @@ func load_conf() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(cfg)
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(cfg.Password), bcrypt.DefaultCost)
 
 	if err != nil {
@@ -72,8 +73,12 @@ func load_conf() {
 
 	for _, el := range cfg.Monitors {
 
+		if el.Method != "HEAD" && el.Method != "GET" {
+			el.Method = "GET"
+		}
+
 		client := http.Client{Timeout: time.Duration(el.Timeout) * time.Second}
-		monitor := Monitor{Url: el.Url, ServiceName: el.Name, Group: el.Group, Timeout: el.Timeout, Interval: el.Interval, http_client: client}
+		monitor := Monitor{Url: el.Url, ServiceName: el.Name, Group: el.Group, Timeout: el.Timeout, Method: el.Method, Interval: el.Interval, http_client: client}
 
 		err = add_monitor_to_db(&monitor)
 		if err != nil {
@@ -85,5 +90,7 @@ func load_conf() {
 		go monitor.run()
 
 	}
+
+	fmt.Println("Loaded: ", cfg)
 
 }
