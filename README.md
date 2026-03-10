@@ -16,7 +16,6 @@ It periodically checks configured URLs, stores results in SQLite, and provides a
 * 📊 Uptime calculation based on recent checks
 * 🗄 SQLite database (no external dependencies)
 * 👤 Single admin account with authentication
-* ✉ Email notifications & password recovery
 * 🖥 Web dashboard + admin panel
 * 📡 JSON API
 * 🏷 Dynamic SVG uptime badges
@@ -32,7 +31,7 @@ It periodically checks configured URLs, stores results in SQLite, and provides a
 
 * Go **1.21+** (recommended)
 * SQLite (embedded via Go driver)
-* Linux / macOS / Windows
+* Linux / Windows
 
 ## Installation
 
