@@ -1,5 +1,5 @@
 <div align="center" width="100%">
-    <img src="./src/data/static/icon" width="128" alt="Uptime Kuma Logo" />
+    <img src="./frontend/static/icon" width="128" alt=" Logo" />
 </div>
 
 ---
