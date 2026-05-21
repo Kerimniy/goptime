@@ -50,14 +50,6 @@ On first run:
 <div data-badge-url="https://api.github.com/repos/Kerimniy-Uptime/test/contents/data.json"></div>
 ```
 
-
-## Security Notes
-
-* Cookies are `HttpOnly` and signed
-* Passwords are never stored in plaintext
-* CSRF protection is minimal — **not recommended for hostile environments**
-* Designed for **self-hosted / private use**
-
 ## Limitations
 
 * No role system
