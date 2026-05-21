@@ -47,12 +47,25 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	
+	url_file, err := os.Open("token")
+
+	if err != nil {
+		panic(err)
+	}
+
+	bu, err := io.ReadAll(url_file)
+	url := string(bu)
+
+	if err != nil {
+		panic(err)
+	}
 
 	fs := memfs.New()
 	storer := memory.NewStorage()
 
 	repo, err := git.Clone(storer, fs, &git.CloneOptions{
-		URL: "https://github.com/Kerimniy-Uptime/test.git",
+		URL: url,
 	})
 
 	if err != nil {
