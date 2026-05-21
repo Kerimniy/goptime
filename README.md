@@ -4,7 +4,7 @@
 
 ---
 
->![IMPORTANT]
+>[!IMPORTANT]
 >You have to have 2 repo:
 > with data.json
 > with frontend (github pages)
