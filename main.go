@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -48,7 +49,7 @@ func main() {
 		panic(err)
 	}
 	
-	url_file, err := os.Open("token")
+	url_file, err := os.Open("url")
 
 	if err != nil {
 		panic(err)
@@ -56,6 +57,8 @@ func main() {
 
 	bu, err := io.ReadAll(url_file)
 	url := string(bu)
+
+	fmt.Println(url)
 
 	if err != nil {
 		panic(err)
