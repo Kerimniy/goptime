@@ -48,7 +48,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	url_file, err := os.Open("url")
 
 	if err != nil {
@@ -96,6 +96,11 @@ func main() {
 		state.Reset = uint64(time.Now().Unix())
 	}
 	var count = 0
+
+	if index >= 30 {
+		index = 0
+	}
+
 	for {
 		time.Sleep(time.Second * time.Duration(state.Interval))
 
@@ -114,7 +119,7 @@ func main() {
 
 		push_state(&state, repo, fs, access_token)
 		index += 1
-		if index == 30 {
+		if index >= 30 {
 			index = 0
 		}
 
