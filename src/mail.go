@@ -80,11 +80,7 @@ func send_recovery(mail_info Mail, code string) error {
 	username := mail_info.Username
 	password := mail_info.Password
 
-	from = "mutalupkerim@yandex.ru"
-	password = "rwfxllmoxfmsxprt"
-	to = "mutalupkerim@gmail.com"
-	host = "smtp.yandex.ru"
-	username = from
+
 
 	tmpl := template.Must(template.ParseFiles("data/templates/recovery.html"))
 	var tpl bytes.Buffer
